@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warehouse Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .form-input {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+    .btn-submit {
+      background-color: #047857;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-top: 10px;
+      width: fit-content;
+    }
+    .btn-action {
+      padding: 4px 8px;
+      margin-right: 5px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    .btn-edit {
+      background-color: #3b82f6;
+      color: white;
+    }
+    .btn-delete {
+      background-color: #ef4444;
+      color: white;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="flex">
+    <!-- Sidebar -->
+  <aside class="w-64 bg-green-900 text-white flex flex-col p-6">
+    <h2 class="text-2xl font-bold mb-6">AgriFlowTrack</h2>
+   <nav class="flex-1 space-y-4">
+<a href="./dashboard.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="./warehouse.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-warehouse"></i> Warehouse</a>
+<a href="./inventory.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-boxes"></i> Inventory</a>
+<a href="./harvest.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-seedling"></i> Harvest</a>
+<a href="./batch.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-layer-group"></i> Batch</a>
+<a href="./vehicles.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-truck"></i> Vehicles</a>
+<a href="./customer.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-users"></i> Customer</a>
+<a href="./order.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-shopping-cart"></i> Order</a>
+<a href="./market.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-chart-line"></i> Market</a>
+<a href="./shipment.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-shipping-fast"></i> Shipments</a>
+<a href="./Agriculturalproducts.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-boxes"></i> Argicultural Products</a>
+<a href="./AgriInput Monitor.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas Farm"></i> Agri-Input Monitor</a>
+<a href="./perishable products.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-seedling"></i> Perishable Products</a>
+<a href="./tracking of products.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-layer-group"></i> Tracking of products</a>
+<a href="./post-harvest monitor.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-chart-line"></i> Post Harvest Monitor</a>
+<a href="./tracking harvested crops.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-seedling"></i>Tracking Harvested Crops</a>
+<a href="./storage conditions.html" class="flex items-center gap-2 hover:text-green-300"><i class="fas fa-tachometer-alt"></i>Storage Conditions</a>
+
+<a href="./login.html" class="flex items-center gap-2 hover:text-green-300"><i class="fa fa-sign-out"></i> Logout</a>
+</nav>
+  </aside>
+
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8">
+      <h1 class="text-3xl font-bold text-green-700 mb-6">Warehouse Management</h1>
+
+      <!-- Add Warehouse Form -->
+      <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <h3 class="text-lg font-semibold mb-4">Add Warehouse</h3>
+        <form id="warehouseForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input type="text" id="wName" placeholder="Warehouse Name" required class="form-input">
+          <input type="text" id="wLocation" placeholder="Location" required class="form-input">
+          <input type="number" id="wCapacity" placeholder="Capacity (kg)" required class="form-input">
+          <button type="submit" class="btn-submit col-span-1 md:col-span-3">Add Warehouse</button>
+        </form>
+      </div>
+
+      <!-- Search + Count -->
+      <div class="mb-4 flex justify-between items-center">
+        <input type="text" id="warehouseSearch" placeholder="Search by name..." class="form-input w-64">
+        <p class="text-gray-500 text-sm">Showing <span id="warehouseCount">0</span> warehouses</p>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="min-w-full table-auto text-sm text-gray-600" id="warehouseTable">
+          <thead class="bg-green-100 text-left">
+            <tr>
+              <th class="px-4 py-2">Name</th>
+              <th class="px-4 py-2">Location</th>
+              <th class="px-4 py-2">Capacity</th>
+              <th class="px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200" id="warehouseTableBody">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const warehouses = [
+      { name: "Central Depot", location: "Dhaka", capacity: 10000 },
+      { name: "North Storage", location: "Sylhet", capacity: 8000 },
+    ];
+
+    function renderWarehouseTable(data) {
+      const tableBody = document.getElementById("warehouseTableBody");
+      tableBody.innerHTML = "";
+      data.forEach((w, index) => {
+        tableBody.innerHTML += `
+          <tr>
+            <td class="px-4 py-2">${w.name}</td>
+            <td class="px-4 py-2">${w.location}</td>
+            <td class="px-4 py-2">${w.capacity} kg</td>
+            <td class="px-4 py-2">
+              <button class="btn-action btn-edit" onclick="editWarehouse(${index})">Edit</button>
+              <button class="btn-action btn-delete" onclick="deleteWarehouse(${index})">Delete</button>
+            </td>
+          </tr>`;
+      });
+      document.getElementById("warehouseCount").textContent = data.length;
+    }
+
+    function filterWarehouses() {
+      const query = document.getElementById("warehouseSearch").value.toLowerCase();
+      const filtered = warehouses.filter(w => w.name.toLowerCase().includes(query));
+      renderWarehouseTable(filtered);
+    }
+
+    function addWarehouse(e) {
+      e.preventDefault();
+      const name = document.getElementById("wName").value;
+      const location = document.getElementById("wLocation").value;
+      const capacity = parseInt(document.getElementById("wCapacity").value);
+      if (name && location && capacity) {
+        warehouses.push({ name, location, capacity });
+        renderWarehouseTable(warehouses);
+        e.target.reset();
+      }
+    }
+
+    function editWarehouse(index) {
+      const warehouse = warehouses[index];
+      document.getElementById("wName").value = warehouse.name;
+      document.getElementById("wLocation").value = warehouse.location;
+      document.getElementById("wCapacity").value = warehouse.capacity;
+      deleteWarehouse(index);
+    }
+
+    function deleteWarehouse(index) {
+      warehouses.splice(index, 1);
+      renderWarehouseTable(warehouses);
+    }
+
+    document.getElementById("warehouseForm").addEventListener("submit", addWarehouse);
+    document.getElementById("warehouseSearch").addEventListener("input", filterWarehouses);
+
+    renderWarehouseTable(warehouses);
+  </script>
+</body>
+</html>
