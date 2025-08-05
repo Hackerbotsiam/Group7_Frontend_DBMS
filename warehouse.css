@@ -1,0 +1,35 @@
+/* warehouse.css */
+.form-input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.btn-submit {
+  background-color: #047857;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin-top: 10px;
+  width: fit-content;
+  align-self: end;
+  justify-self: start;
+}
+
+.btn-action {
+  padding: 4px 8px;
+  margin-right: 5px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.btn-edit {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-delete {
+  background-color: #ef4444;
+  color: white;
+}
