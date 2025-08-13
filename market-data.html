@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgriFlowTrack — Market Data</title>
+  <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>AgriFlowTrack</h2>
+    <nav>
+      <a href="./dashboard.html">Dashboard</a>
+      <a href="./agricultural-products.html">Agricultural Products</a>
+      <a href="./input-monitor.html">Agri Inputs</a>
+      <a href="./perishable-products.html">Perishable Products</a>
+      <a href="./post-harvest-monitor.html">Post-Harvest Monitor</a>
+      <a href="./storage-conditions.html">Storage Conditions</a>
+      <a href="./tracking-harvested-crops.html">Harvested Crops</a>
+      <a href="./tracking-of-products.html">Tracking of Products</a>
+      <a href="./market-data.html" class="active">Market Data</a>
+      <button id="logoutBtn" class="logout">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="header">
+      <div class="title">Market Data</div>
+      <div class="actions">
+        <input id="q" type="search" placeholder="Search in table…" style="min-width:220px">
+        <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <section class="card">
+      <h3 style="margin:0 0 12px">Create / Edit</h3>
+      <form id="form">
+        <input type="hidden" id="id" />
+        <div><label for="market_name">Market Name</label><input id="market_name" type="text"></div>
+        <div><label for="product">Product</label><input id="product" type="text"></div>
+        <div><label for="price_per_unit">Price / Unit</label><input id="price_per_unit" type="number" placeholder="0.00"></div>
+        <div><label for="price_date">Price Date</label><input id="price_date" type="date"></div>
+        <div style="display:flex; gap:10px; align-items:center">
+          <button class="btn btn-primary" type="submit">Save</button>
+          <button class="btn btn-ghost" type="button" id="resetBtn">Reset</button>
+          <span id="msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <table class="table" id="table">
+        <thead><tr><th>ID</th><th>Market</th><th>Product</th><th>Price / Unit</th><th>Date</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const RESOURCE='market_data';
+function apiBase(){
+  const i = location.pathname.indexOf('/public/');
+  const root = i > -1 ? location.pathname.slice(0, i) : '';
+  return location.origin + root + '/api/index.php';
+}    
+const API=apiBase();
+    async function apiList(r,p={}){ const qs=new URLSearchParams(p).toString(); const x=await fetch(API+'/'+r+(qs?('?'+qs):''),{credentials:'include'}); const j=await x.json().catch(()=>[]); if(!x.ok) throw new Error(j.error||'Fetch failed'); return j; }
+    async function apiGet(r,id){ const x=await fetch(`${API}/${r}/${id}`,{credentials:'include'}); const j=await x.json(); if(!x.ok) throw new Error(j.error||'Fetch failed'); return j; }
+    async function apiCreate(r,d){ const x=await fetch(`${API}/${r}`,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); const j=await x.json(); if(!x.ok) throw new Error(j.error||'Create failed'); return j; }
+    async function apiUpdate(r,id,d){ const x=await fetch(`${API}/${r}/${id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); const j=await x.json(); if(!x.ok) throw new Error(j.error||'Update failed'); return j; }
+    async function apiRemove(r,id){ const x=await fetch(`${API}/${r}/${id}`,{method:'DELETE',credentials:'include'}); const j=await x.json(); if(!x.ok) throw new Error(j.error||'Delete failed'); return j; }
+    async function apiLogout(){ await fetch(API+'/logout',{method:'POST',credentials:'include'}).catch(()=>{}); }
+    function esc(s){ return String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function toast(m){ let t=document.querySelector('.toast'); if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t);} t.textContent=m; requestAnimationFrame(()=>t.classList.add('show')); setTimeout(()=>t.classList.remove('show'),2600); }
+    async function load(){ const rows=await apiList(RESOURCE).catch(()=>[]); window.__rows=rows; renderRows(rows); }
+    function renderRows(rows){
+      const q=document.getElementById('q').value.toLowerCase().trim();
+      const list=q?rows.filter(r=>JSON.stringify(r).toLowerCase().includes(q)):rows;
+      const tb=document.querySelector('#table tbody'); tb.innerHTML='';
+      if(!list.length){ tb.innerHTML=`<tr><td colspan="7"><div style="padding:16px;color:#799488">No records found.</div></td></tr>`; return; }
+      list.forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${r.id}</td>
+          <td>${esc(r.market_name||'')}</td>
+          <td>${esc(r.product||'')}</td>
+          <td>${esc(r.price_per_unit||'')}</td>
+          <td>${esc(r.price_date||'')}</td>
+          <td>${r.created_at??''}</td>
+          <td class="actions"><button class="btn btn-ghost" onclick="editRow(${r.id})">✏️ Edit</button><button class="btn btn-danger" onclick="delRow(${r.id})">🗑 Delete</button></td>`;
+        tb.appendChild(tr);
+      });
+    }
+    async function editRow(id){ const r=await apiGet(RESOURCE,id);
+      ['market_name','product','price_per_unit','price_date'].forEach(k=>document.getElementById(k).value=r[k]??'');
+      document.getElementById('id').value=r.id; toast('Loaded for editing'); }
+    async function delRow(id){ if(!confirm('Delete record #'+id+'?')) return; await apiRemove(RESOURCE,id); toast('Record deleted'); load(); }
+    document.getElementById('form').addEventListener('submit', async e=>{
+      e.preventDefault();
+      const id=document.getElementById('id').value;
+      const payload={ market_name:market_name.value, product:product.value, price_per_unit:price_per_unit.value, price_date:price_date.value };
+      if(id){ await apiUpdate(RESOURCE,id,payload); toast('Updated successfully'); } else { await apiCreate(RESOURCE,payload); toast('Created successfully'); }
+      e.target.reset(); load();
+    });
+    refreshBtn.addEventListener('click',load);
+    q.addEventListener('input',()=>renderRows(window.__rows||[]));
+    logoutBtn.addEventListener('click', async ()=>{ await apiLogout(); location.href='./login.html'; });
+    load();
+  </script>
+</body>
+</html>
