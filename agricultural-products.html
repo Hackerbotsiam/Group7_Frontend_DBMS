@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgriFlowTrack — Agricultural Products</title>
+  <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>AgriFlowTrack</h2>
+    <nav>
+      <a href="./dashboard.html">Dashboard</a>
+      <a href="./agricultural-products.html" class="active">Agricultural Products</a>
+      <a href="./input-monitor.html">Agri Inputs</a>
+      <a href="./perishable-products.html">Perishable Products</a>
+      <a href="./post-harvest-monitor.html">Post-Harvest Monitor</a>
+      <a href="./storage-conditions.html">Storage Conditions</a>
+      <a href="./tracking-harvested-crops.html">Harvested Crops</a>
+      <a href="./tracking-of-products.html">Tracking of Products</a>
+      <a href="./market-data.html">Market Data</a>
+      <button id="logoutBtn" class="logout">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="header">
+      <div class="title">Agricultural Products</div>
+      <div class="actions">
+        <input id="q" type="search" placeholder="Search in table…" style="min-width:220px">
+        <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <section class="card">
+      <h3 style="margin:0 0 12px">Create / Edit</h3>
+      <form id="form">
+        <input type="hidden" id="id" />
+        <div><label for="growing_date">Growing Date</label><input id="growing_date" type="date"></div>
+        <div><label for="harvest_date">Harvest Date</label><input id="harvest_date" type="date"></div>
+        <div><label for="storage_requirements">Storage Requirements</label><input id="storage_requirements" type="text" placeholder=""></div>
+        <div><label for="shelf_life">Shelf Life</label><input id="shelf_life" type="text" placeholder=""></div>
+        <div><label for="packaging_details">Packaging Details</label><input id="packaging_details" type="text" placeholder=""></div>
+        <div style="display:flex; gap:10px; align-items:center">
+          <button class="btn btn-primary" type="submit">Save</button>
+          <button class="btn btn-ghost" type="button" id="resetBtn">Reset</button>
+          <span id="msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <table class="table" id="table">
+        <thead><tr><th>ID</th><th>Growing Date</th><th>Harvest Date</th><th>Storage Requirements</th><th>Shelf Life</th><th>Packaging Details</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const RESOURCE = 'agricultural_products';
+function apiBase(){
+  const i = location.pathname.indexOf('/public/');
+  const root = i > -1 ? location.pathname.slice(0, i) : '';
+  return location.origin + root + '/api/index.php';
+}    const API = apiBase();
+    async function apiList(r,p={}){ const qs=new URLSearchParams(p).toString(); const resp=await fetch(API+'/'+r+(qs?('?'+qs):''),{credentials:'include'}); const j=await resp.json().catch(()=>[]); if(!resp.ok) throw new Error(j.error||'Fetch failed'); return j; }
+    async function apiGet(r,id){ const resp=await fetch(`${API}/${r}/${id}`,{credentials:'include'}); const j=await resp.json(); if(!resp.ok) throw new Error(j.error||'Fetch failed'); return j; }
+    async function apiCreate(r,d){ const resp=await fetch(`${API}/${r}`,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); const j=await resp.json(); if(!resp.ok) throw new Error(j.error||'Create failed'); return j; }
+    async function apiUpdate(r,id,d){ const resp=await fetch(`${API}/${r}/${id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); const j=await resp.json(); if(!resp.ok) throw new Error(j.error||'Update failed'); return j; }
+    async function apiRemove(r,id){ const resp=await fetch(`${API}/${r}/${id}`,{method:'DELETE',credentials:'include'}); const j=await resp.json(); if(!resp.ok) throw new Error(j.error||'Delete failed'); return j; }
+    async function apiLogout(){ await fetch(API+'/logout',{method:'POST',credentials:'include'}).catch(()=>{}); }
+
+    function esc(s){ return String(s??'').replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function toast(m){ let t=document.querySelector('.toast'); if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t);} t.textContent=m; requestAnimationFrame(()=>t.classList.add('show')); setTimeout(()=>t.classList.remove('show'),2600); }
+
+    async function load(){
+      const rows = await apiList(RESOURCE).catch(()=>[]);
+      window.__rows = rows; renderRows(rows);
+    }
+    function renderRows(rows){
+      const q=document.getElementById('q').value.toLowerCase().trim();
+      const list = q ? rows.filter(r=>JSON.stringify(r).toLowerCase().includes(q)) : rows;
+      const tb=document.querySelector('#table tbody'); tb.innerHTML='';
+      if(!list.length){ tb.innerHTML=`<tr><td colspan="8"><div style="padding:16px;color:#799488">No records found.</div></td></tr>`; return; }
+      list.forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${r.id}</td>
+          <td>${esc(r.growing_date||'')}</td>
+          <td>${esc(r.harvest_date||'')}</td>
+          <td>${esc(r.storage_requirements||'')}</td>
+          <td>${esc(r.shelf_life||'')}</td>
+          <td>${esc(r.packaging_details||'')}</td>
+          <td>${r.created_at??''}</td>
+          <td class="actions">
+            <button class="btn btn-ghost" onclick="editRow(${r.id})">✏️ Edit</button>
+            <button class="btn btn-danger" onclick="delRow(${r.id})">🗑 Delete</button>
+          </td>`;
+        tb.appendChild(tr);
+      });
+    }
+    async function editRow(id){
+      const r = await apiGet(RESOURCE,id);
+      id&&(document.getElementById('id').value=r.id);
+      ['growing_date','harvest_date','storage_requirements','shelf_life','packaging_details'].forEach(k=>{
+        document.getElementById(k).value = r[k] ?? '';
+      });
+      toast('Loaded for editing');
+    }
+    async function delRow(id){
+      if(!confirm('Delete record #'+id+'?')) return;
+      await apiRemove(RESOURCE,id); toast('Record deleted'); load();
+    }
+    document.getElementById('form').addEventListener('submit', async e=>{
+      e.preventDefault();
+      const id=document.getElementById('id').value;
+      const payload={
+        growing_date:document.getElementById('growing_date').value,
+        harvest_date:document.getElementById('harvest_date').value,
+        storage_requirements:document.getElementById('storage_requirements').value,
+        shelf_life:document.getElementById('shelf_life').value,
+        packaging_details:document.getElementById('packaging_details').value
+      };
+      if(id){ await apiUpdate(RESOURCE,id,payload); toast('Updated successfully'); }
+      else  { await apiCreate(RESOURCE,payload); toast('Created successfully'); }
+      document.getElementById('form').reset(); load();
+    });
+    document.getElementById('refreshBtn').addEventListener('click',load);
+    document.getElementById('q').addEventListener('input',()=>renderRows(window.__rows||[]));
+    document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await apiLogout(); location.href='./login.html'; });
+    load();
+  </script>
+</body>
+</html>
