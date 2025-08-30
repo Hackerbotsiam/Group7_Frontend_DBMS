@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgriFlowTrack — Login</title>
+  <link rel="stylesheet" href="./login.css" />
+<script>
+  window.API_BASE = location.origin + '/agriflowtrack_up/api/index.php';
+</script>
+<script src="./api.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form input[id]:not([name]), form select[id]:not([name]), form textarea[id]:not([name])')
+      .forEach(el => el.name = el.id);
+  });
+
+  async function createRow(entity, payload) {
+    if (window.apiCreate) return apiCreate(entity, payload);
+    const res = await fetch(`${window.API_BASE}?entity=${encodeURIComponent(entity)}&action=create`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+  async function listRows(entity, q = '') {
+    if (window.apiList) return apiList(entity, q);
+    const res = await fetch(`${window.API_BASE}?entity=${encodeURIComponent(entity)}&action=list${q ? '&q='+encodeURIComponent(q) : ''}`);
+    return res.json();
+  }
+
+  function wireFormSubmit(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const entity = form.dataset.entity;
+      const data = Object.fromEntries(new FormData(form).entries());
+      Object.keys(data).forEach(k => {
+        if (/(_kg|_level|rate|price|amount)/i.test(k) && data[k] !== '') {
+          const n = Number(data[k]); if (!Number.isNaN(n)) data[k] = n;
+        }
+      });
+      try {
+        const out = await createRow(entity, data);
+        console.log('Saved:', out);
+        form.reset();
+        form.querySelectorAll('input, textarea').forEach(i => i.blur());
+      } catch (err) {
+        console.error(err);
+        alert('Save failed. Check console for details.');
+      }
+    });
+  }
+</script>
+
+</head>
+<body>
+  <div class="login-container">
+    <h1>AgriFlowTrack</h1>
+    <form id="loginForm">
+      <label>Username</label>
+      <input type="text" id="username" required />
+      <label>Password</label>
+      <input type="password" id="password" required />
+      <button type="submit">Log in</button>
+      <p id="msg" class="msg"></p>
+    </form>
+  </div>
+
+  <script>
+    function apiBase(){
+  const i = location.pathname.indexOf('/public/');
+  const root = i > -1 ? location.pathname.slice(0, i) : '';
+  return location.origin + root + '/api/index.php';
+}
+    const API = apiBase();
+
+    async function apiLogin(username, password){
+      const r = await fetch(API + '/login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        credentials:'include', body: JSON.stringify({username, password})
+      });
+      const j = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(j.error || 'Login failed');
+      return j;
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value.trim();
+      const msg = document.getElementById('msg');
+      msg.textContent='';
+      try{ await apiLogin(u,p); location.href='./dashboard.html'; }
+      catch(err){ msg.textContent = err.message || 'Login failed'; }
+    });
+  </script>
+</body>
+</html>
