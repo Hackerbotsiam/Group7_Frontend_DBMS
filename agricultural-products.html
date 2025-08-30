@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgriFlowTrack — Agricultural Products</title>
+  <link rel="stylesheet" href="./dashboard.css">
+  <script>
+    // REST API base (adjust only if your folder name is different)
+    window.API_BASE = window.API_BASE || (location.origin + '/agriflowtrack_up/api/index.php');
+  </script>
+  <script src="./api.js"></script>
+  <script>
+    // Ensure form fields submit values (name = id)
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('form [id]:not([name])').forEach(el => el.name = el.id);
+    });
+
+    const ENTITY = 'agricultural_products';
+    let editingId = null;
+
+    // Helper: read {ok,data} or a bare array
+    async function getRows(url, options) {
+      const r = await fetch(url, options);
+      let json = {};
+      try { json = await r.json(); } catch (e) {}
+      return Array.isArray(json) ? json : (json.data || []);
+    }
+
+    async function list(q='') {
+      const url = `${API_BASE}/${ENTITY}${q ? `?q=${encodeURIComponent(q)}` : ''}`;
+      const rows = await getRows(url);
+
+      const tb = document.querySelector('#table tbody');
+      tb.innerHTML = '';
+      rows.forEach(x => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${x.id ?? ''}</td>
+          <td>${x.product_name ?? ''}</td>
+          <td>${x.category ?? ''}</td>
+          <td>${x.growing_date ?? ''}</td>
+          <td>${x.harvest_date ?? ''}</td>
+          <td>${x.storage_requirements ?? ''}</td>
+          <td>${x.shelf_life ?? ''}</td>
+          <td>${x.packaging_details ?? ''}</td>
+          <td>
+            <button class="btn btn-ghost" 
+              data-edit='${JSON.stringify(x).replace(/'/g,"&#39;")}'>Edit</button>
+            <button class="btn btn-danger" data-del="${x.id}">Delete</button>
+          </td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    async function save(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const url = editingId ? `${API_BASE}/${ENTITY}/${editingId}` : `${API_BASE}/${ENTITY}`;
+      await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      editingId = null;
+      e.target.reset();
+      await list(document.getElementById('q').value);
+    }
+
+    function onTableClick(e) {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      // Edit
+      if (btn.dataset.edit) {
+        const r = JSON.parse(btn.dataset.edit.replace(/&#39;/g,"'"));
+        editingId = r.id;
+        ['product_name','category','growing_date','harvest_date','storage_requirements','shelf_life','packaging_details']
+          .forEach(k => { const el = document.getElementById(k); if (el) el.value = r[k] ?? '' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      // Delete
+      if (btn.dataset.del) {
+        const id = btn.dataset.del;
+        if (confirm('Delete this record?')) {
+          fetch(`${API_BASE}/${ENTITY}/${id}`, { method: 'DELETE' })
+            .then(() => list(document.getElementById('q').value));
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      form.addEventListener('submit', save);
+      table.addEventListener('click', onTableClick);
+      refreshBtn.addEventListener('click', () => list(q.value));
+      q.addEventListener('input', () => list(q.value));
+      list();
+    });
+  </script>
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>AgriFlowTrack</h2>
+    <nav>
+      <a href="./dashboard.html">Dashboard</a>
+      <a href="./agricultural-products.html" class="active">Agricultural Products</a>
+      <a href="./input-monitor.html">Agri Inputs</a>
+      <a href="./perishable-products.html">Perishable Products</a>
+      <a href="./post-harvest-monitor.html">Post-Harvest Monitor</a>
+      <a href="./storage-conditions.html">Storage Conditions</a>
+      <a href="./tracking-harvested-crops.html">Harvested Crops</a>
+      <a href="./tracking-of-products.html">Tracking of Products</a>
+      <a href="./market-data.html">Market Data</a>
+      <a href="./inventory.html">Inventory</a>
+      <button id="logoutBtn" class="logout">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="header">
+      <div class="title">Agricultural Products</div>
+      <div class="actions">
+        <input id="q" type="search" placeholder="Search in table…" style="min-width:220px">
+        <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <section class="card">
+      <h3 style="margin:0 0 12px">Create / Edit</h3>
+      <form id="form">
+        <input type="hidden" id="id">
+        <div><label for="product_name">Product Name</label><input id="product_name" placeholder="e.g. Fresh Tomato (Local)" required></div>
+        <div><label for="category">Category</label><input id="category" placeholder="e.g. Fresh / Dry / Processed"></div>
+        <div><label for="growing_date">Growing Date</label><input id="growing_date" type="date" placeholder="Select growing date"></div>
+        <div><label for="harvest_date">Harvest Date</label><input id="harvest_date" type="date" placeholder="Select harvest date"></div>
+        <div><label for="storage_requirements">Storage Requirements</label><input id="storage_requirements" placeholder="e.g. 2–4°C, 85–95% RH"></div>
+        <div><label for="shelf_life">Shelf Life (days)</label><input id="shelf_life" type="number" step="1" min="0" placeholder="e.g. 14"></div>
+        <div style="grid-column:1/-1"><label for="packaging_details">Packaging Details</label><input id="packaging_details" placeholder="e.g. 1kg net bag; eco box; EAN-13"></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" type="submit">Save</button>
+          <button class="btn btn-ghost" type="reset" onclick="editingId=null">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <table class="table" id="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>Growing Date</th>
+            <th>Harvest Date</th>
+            <th>Storage Requirements</th>
+            <th>Shelf Life</th>
+            <th>Packaging Details</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
