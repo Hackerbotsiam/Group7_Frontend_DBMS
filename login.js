@@ -1,1 +1,0 @@
-document.getElementById('loginForm').addEventListener('submit',async(e)=>{e.preventDefault();const u=username.value.trim(),p=password.value.trim(),m=msg;m.textContent='';try{await apiLogin(u,p);location.href='./dashboard.html';}catch(err){m.textContent=err.message||'Login failed';}});
