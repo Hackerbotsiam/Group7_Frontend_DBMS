@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteBase /agriflowtrack/api/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]
