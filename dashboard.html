@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgriFlowTrack — Dashboard</title>
+  <link rel="stylesheet" href="./dashboard.css">
+  <script defer src="./dashboard.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>AgriFlowTrack</h2>
+    <nav>
+      <a href="./dashboard.html" class="active">Dashboard</a>
+      <a href="./agricultural-products.html">Agricultural Products</a>
+      <a href="./input-monitor.html">Agri Inputs</a>
+      <a href="./perishable-products.html">Perishable Products</a>
+      <a href="./post-harvest-monitor.html">Post-Harvest Monitor</a>
+      <a href="./storage-conditions.html">Storage Conditions</a>
+      <a href="./tracking-harvested-crops.html">Harvested Crops</a>
+      <a href="./tracking-of-products.html">Tracking of Products</a>
+      <a href="./market-data.html">Market Data</a>
+      <a href="./inventory.html">Inventory</a>
+      <button id="logoutBtn" class="logout">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="header">
+      <div class="title">Dashboard</div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <section class="cards">
+      <div class="card"><h3 id="countProducts">—</h3><p>Products</p></div>
+      <div class="card"><h3 id="countInputs">—</h3><p>Agri Inputs</p></div>
+      <div class="card"><h3 id="countPerish">—</h3><p>Perishables</p></div>
+      <div class="card"><h3 id="countPost">—</h3><p>Post-Harvest</p></div>
+    </section>
+
+    <section class="card">
+      <h3 style="margin-bottom:12px">Latest Market Prices</h3>
+      <table class="table" id="marketTable">
+        <thead>
+          <tr>
+            <th>Market</th>
+            <th>Product</th>
+            <th>Price / Unit</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" style="text-align:center">Loading…</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
