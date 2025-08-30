@@ -1,8 +1,0 @@
-const API_BASE=(window.API_BASE)||(location.origin+'/agriflowtrack/api');
-async function apiLogin(u,p){const r=await fetch(API_BASE+'/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({username:u,password:p})}); if(!r.ok) throw new Error((await r.json()).error||'Login failed'); return r.json();}
-async function apiLogout(){await fetch(API_BASE+'/logout',{method:'POST',credentials:'include'}).catch(()=>{});}
-async function apiList(res,params={}){const qs=new URLSearchParams(params).toString(); const url=API_BASE+'/'+res+(qs?('?'+qs):''); const r=await fetch(url,{credentials:'include'}); if(!r.ok) throw new Error((await r.json()).error||'Fetch failed'); return r.json();}
-async function apiGet(res,id){const r=await fetch(`${API_BASE}/${res}/${id}`,{credentials:'include'}); if(!r.ok) throw new Error((await r.json()).error||'Fetch failed'); return r.json();}
-async function apiCreate(res,data){const r=await fetch(`${API_BASE}/${res}`,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); if(!r.ok) throw new Error((await r.json()).error||'Create failed'); return r.json();}
-async function apiUpdate(res,id,data){const r=await fetch(`${API_BASE}/${res}/${id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); if(!r.ok) throw new Error((await r.json()).error||'Update failed'); return r.json();}
-async function apiRemove(res,id){const r=await fetch(`${API_BASE}/${res}/${id}`,{method:'DELETE',credentials:'include'}); if(!r.ok) throw new Error((await r.json()).error||'Delete failed'); return r.json();}
